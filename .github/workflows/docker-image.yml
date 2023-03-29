@@ -1,0 +1,32 @@
+name: Docker Image Push to ECR
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the codebase
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: $ {{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: $ {{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Login to ECR
+      run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/l1u1c3a9
+      
+    - name: Build, tag and push the Docker image
+      run: |
+        docker build . -t amj2/continuous-php-image
+        docker tag amj2/continuous_php_image:latest public.ecr.aws/l1u1c3a9/amj2/continuous_php_image:latest
+        docker push public.ecr.aws/l1u1c3a9/amj2/continuous_php_image:latest
+        
